@@ -58,33 +58,46 @@
         //  this.setAttribute('value','');
         // }, true);
     }
+    //thx http://stackoverflow.com/a/1268377
+    function setValue(len, value) {
+        var n = Math.abs(value),
+            zeros = Math.max(0, len - Math.floor(n).toString().length),
+            zeroString = Math.pow(10, zeros).toString().substr(1);
+
+        if (value < 0) {
+            zeroString = '-' + zeroString;
+        }
+
+        active_field.value = zeroString + n;
+    }
+
 
     function upEvent() {
         if (active_field.value === '') {
             if (active_field.classList.contains('pf-input-date-year') && active_field.value === '') {
-                active_field.value = date.getFullYear();
+                setValue(4, date.getFullYear());
             }
             if (active_field.classList.contains('pf-input-date-month') && active_field.value === '') {
-                active_field.value = date.getMonth() + 1;
+                setValue(2, date.getMonth() + 1);
             }
             if (active_field.classList.contains('pf-input-date-day') && active_field.value === '') {
-                active_field.value = date.getDate();
+                setValue(2, date.getDate());
             }
         } else {
             if (active_field.classList.contains('pf-input-date-day')) {
                 if (parseInt(active_field.value, 10) >= 31) {
-                    active_field.value = 1;
+                    setValue(2, 1);
                 } else {
-                    active_field.value = parseInt(active_field.value, 10) + 1;
+                    setValue(2, (parseInt(active_field.value, 10) + 1));
                 }
             } else if (active_field.classList.contains('pf-input-date-month')) {
                 if (parseInt(active_field.value, 10) >= 12) {
-                    active_field.value = 1;
+                    setValue(2, 1);
                 } else {
-                    active_field.value = parseInt(active_field.value, 10) + 1;
+                    setValue(2, parseInt(active_field.value, 10) + 1);
                 }
             } else {
-                active_field.value = parseInt(active_field.value, 10) + 1;
+                setValue(4, parseInt(active_field.value, 10) + 1);
             }
         }
     }
@@ -92,29 +105,29 @@
     function downEvent() {
         if (active_field.value === '') {
             if (active_field.classList.contains('pf-input-date-year') && active_field.value === '') {
-                active_field.value = date.getFullYear();
+                setValue(4, date.getFullYear());
             }
             if (active_field.classList.contains('pf-input-date-month') && active_field.value === '') {
-                active_field.value = date.getMonth() + 1;
+                setValue(2, date.getMonth() + 1);
             }
             if (active_field.classList.contains('pf-input-date-day') && active_field.value === '') {
-                active_field.value = date.getDate();
+                setValue(2, date.getDate());
             }
         } else {
             if (active_field.classList.contains('pf-input-date-day')) {
                 if (parseInt(active_field.value, 10) <= 1) {
-                    active_field.value = 31;
+                    setValue(2, 31);
                 } else {
-                    active_field.value = parseInt(active_field.value, 10) - 1;
+                    setValue(2, (parseInt(active_field.value, 10) - 1));
                 }
             } else if (active_field.classList.contains('pf-input-date-month')) {
                 if (parseInt(active_field.value, 10) <= 1) {
-                    active_field.value = 12;
+                    setValue(2, 31);
                 } else {
-                    active_field.value = parseInt(active_field.value, 10) - 1;
+                    setValue(2, (parseInt(active_field.value, 10) - 1));
                 }
             } else {
-                active_field.value = parseInt(active_field.value, 10) - 1;
+                setValue(4, (parseInt(active_field.value, 10) - 1));
             }
         }
     }
@@ -146,7 +159,6 @@
     }
 
     function clickWrapperEvent(e) {
-        console.log(e.target);
         e.target.querySelector('input').focus();
     }
 
