@@ -45,19 +45,8 @@
 
         //insert the fake input after the old
         input.outerHTML = input.outerHTML + wrapper.outerHTML;
-
-
-        // year.onfocusin  = function(){
-        //  console.log(this);
-        // };
-        // year.onfocusout = function(){
-        //  console.log(this);
-        // };
-        // year.addEventListener('focus', function(){
-        //  console.log(this);
-        //  this.setAttribute('value','');
-        // }, true);
     }
+
     //thx http://stackoverflow.com/a/1268377
     function setValue(len, value) {
         var n = Math.abs(value),
@@ -74,13 +63,13 @@
 
     function upEvent() {
         if (active_field.value === '') {
-            if (active_field.classList.contains('pf-input-date-year') && active_field.value === '') {
+            if (active_field.classList.contains('pf-input-date-year')) {
                 setValue(4, date.getFullYear());
             }
-            if (active_field.classList.contains('pf-input-date-month') && active_field.value === '') {
+            if (active_field.classList.contains('pf-input-date-month')) {
                 setValue(2, date.getMonth() + 1);
             }
-            if (active_field.classList.contains('pf-input-date-day') && active_field.value === '') {
+            if (active_field.classList.contains('pf-input-date-day')) {
                 setValue(2, date.getDate());
             }
         } else {
@@ -104,13 +93,13 @@
 
     function downEvent() {
         if (active_field.value === '') {
-            if (active_field.classList.contains('pf-input-date-year') && active_field.value === '') {
+            if (active_field.classList.contains('pf-input-date-year')) {
                 setValue(4, date.getFullYear());
             }
-            if (active_field.classList.contains('pf-input-date-month') && active_field.value === '') {
+            if (active_field.classList.contains('pf-input-date-month')) {
                 setValue(2, date.getMonth() + 1);
             }
-            if (active_field.classList.contains('pf-input-date-day') && active_field.value === '') {
+            if (active_field.classList.contains('pf-input-date-day')) {
                 setValue(2, date.getDate());
             }
         } else {
@@ -122,7 +111,7 @@
                 }
             } else if (active_field.classList.contains('pf-input-date-month')) {
                 if (parseInt(active_field.value, 10) <= 1) {
-                    setValue(2, 31);
+                    setValue(2, 12);
                 } else {
                     setValue(2, (parseInt(active_field.value, 10) - 1));
                 }
@@ -159,7 +148,10 @@
     }
 
     function clickWrapperEvent(e) {
-        e.target.querySelector('input').focus();
+        var firstInput = e.target.querySelector('input');
+        if (firstInput) {
+            firstInput.focus();
+        }
     }
 
     function init() {
@@ -202,7 +194,6 @@
 
         document.addEventListener('keyup', function (e) {
             if (active_field !== null) {
-                // console.log(e.keyCode);
                 switch (e.keyCode) {
                 case 38:
                     upEvent();
