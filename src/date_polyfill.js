@@ -1,4 +1,5 @@
 /*jslint browser: true*/
+/*jslint devel: true*/
 (function (window, document) {
     'use strict';
     var active_field = null,
@@ -12,6 +13,7 @@
             input_style = window.getComputedStyle(input, null);
 
         wrapper.setAttribute('class', input.getAttribute('class'));
+        wrapper.classList.add('pf-date-wrapper');
         //Copy all of the styles from the real input
         wrapper.style.cssText = input_style.cssText;
         //hide the real input
@@ -43,6 +45,7 @@
 
         //insert the fake input after the old
         input.outerHTML = input.outerHTML + wrapper.outerHTML;
+
 
         // year.onfocusin  = function(){
         //  console.log(this);
@@ -115,6 +118,38 @@
             }
         }
     }
+
+    function leftEvent() {
+        var inputs = active_field.parentNode.querySelectorAll('input'),
+            i,
+            len = inputs.length;
+        for (i = 0; i < len; i = i + 1) {
+            if (i !== 0 && inputs[i] === active_field) {
+                inputs[(i - 1)].focus();
+                active_field = inputs[(i - 1)];
+                break;
+            }
+        }
+    }
+
+    function rightEvent() {
+        var inputs = active_field.parentNode.querySelectorAll('input'),
+            i,
+            len = inputs.length;
+        for (i = 0; i < len; i = i + 1) {
+            if (i !== (len - 1) && inputs[i] === active_field) {
+                inputs[(i + 1)].focus();
+                active_field = inputs[(i + 1)];
+                break;
+            }
+        }
+    }
+
+    function clickWrapperEvent(e) {
+        console.log(e.target);
+        e.target.querySelector('input').focus();
+    }
+
     function init() {
         var date_inputs = document.querySelectorAll('.input_date'),
             len = date_inputs.length,
@@ -122,6 +157,13 @@
 
         for (i = 0; i < len; i = i + 1) {
             init_input(date_inputs[i]);
+        }
+
+        date_inputs = document.querySelectorAll('.pf-date-wrapper');
+        len = date_inputs.length;
+
+        for (i = 0; i < len; i = i + 1) {
+            date_inputs[i].addEventListener('click', clickWrapperEvent, false);
         }
 
         document.addEventListener("focus", function (e) {
@@ -132,6 +174,7 @@
                 active_field = e.target;
             }
         }, true);
+
         document.addEventListener("blur", function (e) {
             if (e.target.classList.contains('pf-input-date-year') && e.target.value === '') {
                 e.target.value = 'yyyy';
@@ -147,13 +190,19 @@
 
         document.addEventListener('keyup', function (e) {
             if (active_field !== null) {
-
+                // console.log(e.keyCode);
                 switch (e.keyCode) {
                 case 38:
                     upEvent();
                     break;
                 case 40:
                     downEvent();
+                    break;
+                case 39:
+                    rightEvent();
+                    break;
+                case 37:
+                    leftEvent();
                     break;
                 }
             }
