@@ -1,23 +1,187 @@
 /*jslint browser: true*/
 /*jslint devel: true*/
 /*global HTMLElement*/
-(function (document) {
+
+var datepickerPolyfill = (function (document) {
     'use strict';
 
-    var active_field = null,
-        date = new Date();
+    function DatePicker(input) {
+        this.input = input;
 
-    //http://stackoverflow.com/a/384380/2250164
-    function isElement(el) {
-        return (
-            typeof HTMLElement === "object" ? el instanceof HTMLElement : //DOM2
-                    el && typeof el === "object" && el !== null && el.nodeType === 1 &&
-                    typeof el.nodeName === "string"
-        );
+        this.active_field = null;
+        this.current_date = '';
+        this.date = new Date();
+        this.month = false;
+        this.day = false;
+        this.year = false;
+        this.wrapper = false;
+        this.monthInput = false;
+        this.dayInput = false;
+        this.yearInput = false;
+        this.clearBtn = false;
+        this.upBtn = false;
+        this.downBtn = false;
+
+        this.init_input = function () {
+            var datepicker = this,
+                wrapper = document.createElement('div'),
+                realinput = this.input.cloneNode(true);
+
+            wrapper.setAttribute('class', realinput.getAttribute('class'));
+            wrapper.classList.add('pf-date-wrapper');
+
+            wrapper.innerHTML = '<input type="text" class="pf-input-date-month" maxlength="2" value="mm">/' +
+                '<input type="text" class="pf-input-date-day" maxlength="2" value="dd">/' +
+                '<input type="text" class="pf-input-date-year" maxlength="4" value="yyyy">' +
+                '<button tabindex="-1" class="pf-input-date-clear"></button>' +
+                '<button tabindex="-1" class="pf-input-date-up"></button>' +
+                '<button tabindex="-1" class="pf-input-date-down"></button>' +
+                '<button tabindex="-1" class="pf-input-date-toggle-cal"></button>';
+
+            realinput.setAttribute('class', 'pf-input-real');
+
+            wrapper.appendChild(realinput);
+
+            this.input = this.input.parentNode.replaceChild(wrapper, this.input);
+
+            datepicker.wrapper = wrapper;
+            datepicker.monthInput = wrapper.querySelector('.pf-input-date-month');
+            datepicker.dayInput = wrapper.querySelector('.pf-input-date-day');
+            datepicker.yearInput = wrapper.querySelector('.pf-input-date-year');
+            datepicker.clearBtn = wrapper.querySelector('.pf-input-date-clear');
+            datepicker.upBtn = wrapper.querySelector('.pf-input-date-up');
+            datepicker.downBtn = wrapper.querySelector('.pf-input-date-up');
+
+            wrapper.addEventListener('click', datepicker, false);
+            this.upBtn.addEventListener('click', datepicker, false);
+            this.downBtn.addEventListener('click', datepicker, false);
+            this.clearBtn.addEventListener('click', datepicker, false);
+
+            document.addEventListener("focus", function (e) {
+                // var wrapper = e.target.parentNode;
+                if (e.target && e.target.parentNode === wrapper && e.target.classList && (e.target.classList.contains('pf-input-date-year') || e.target.classList.contains('pf-input-date-month') || e.target.classList.contains('pf-input-date-day'))) {
+                    if (isNaN(parseInt(e.target.value, 10)) === true) {
+                        if (e.target.classList.contains('pf-input-date-year')) {
+                            datepicker.increment_year(false);
+                        }
+                        if (e.target.classList.contains('pf-input-date-month')) {
+                            datepicker.increment_month(false);
+                        }
+                        if (e.target.classList.contains('pf-input-date-day')) {
+                            datepicker.increment_day(false);
+                        }
+                    }
+                    datepicker.active_field = e.target;
+                    wrapper.classList.add('pf-wrapper-focused');
+                }
+            }, true);
+
+            document.addEventListener("blur", function (e) {
+                var relatedTarget = null;
+
+                if (datepicker.isElement(e.explicitOriginalTarget)) { //Firefox
+                    relatedTarget = e.explicitOriginalTarget;
+                } else if (datepicker.isElement(e.relatedTarget)) { //Chrome
+                    relatedTarget = e.relatedTarget;
+                }
+
+                if (relatedTarget && relatedTarget.classList.contains('pf-input-date-up') && relatedTarget.parentNode === e.target.parentNode) {
+                    e.preventDefault();
+                    if (e.target.classList.contains('pf-input-date-year')) {
+                        datepicker.increment_year(1);
+                    }
+                    if (e.target.classList.contains('pf-input-date-month')) {
+                        datepicker.increment_month(1);
+                    }
+                    if (e.target.classList.contains('pf-input-date-day')) {
+                        datepicker.increment_day(1);
+                    }
+                    if (e.target && e.target.classList && (e.target.classList.contains('pf-input-date-year') || e.target.classList.contains('pf-input-date-month') || e.target.classList.contains('pf-input-date-day'))) {
+                        setTimeout(function () { e.target.focus(); }, 100);
+                    }
+                } else if (relatedTarget && relatedTarget.classList.contains('pf-input-date-down') && relatedTarget.parentNode === e.target.parentNode) {
+                    e.preventDefault();
+                    if (e.target.classList.contains('pf-input-date-year')) {
+                        datepicker.increment_year(-1);
+                    }
+                    if (e.target.classList.contains('pf-input-date-month')) {
+                        datepicker.increment_month(-1);
+                    }
+                    if (e.target.classList.contains('pf-input-date-day')) {
+                        datepicker.increment_day(-1);
+                    }
+                    if (e.target && e.target.classList && (e.target.classList.contains('pf-input-date-year') || e.target.classList.contains('pf-input-date-month') || e.target.classList.contains('pf-input-date-day'))) {
+                        setTimeout(function () { e.target.focus(); }, 100);
+                    }
+                } else if (e.target && e.target.classList && (e.target.classList.contains('pf-input-date-year') || e.target.classList.contains('pf-input-date-month') || e.target.classList.contains('pf-input-date-day'))) {
+                    if (e.target.classList.contains('pf-input-date-year') && e.target.value === '') {
+                        e.target.value = 'yyyy';
+                    }
+                    if (e.target.classList.contains('pf-input-date-month') && e.target.value === '') {
+                        e.target.value = 'mm';
+                    }
+                    if (e.target.classList.contains('pf-input-date-day') && e.target.value === '') {
+                        e.target.value = 'dd';
+                    }
+                    datepicker.active_field = null;
+                    e.target.parentNode.classList.remove('pf-wrapper-focused');
+                }
+            }, true);
+
+            document.addEventListener('keyup', function (e) {
+                if (datepicker.active_field !== null && datepicker.active_field.parentNode === wrapper) {
+                    switch (e.keyCode) {
+                    case 38:
+                        datepicker.upEvent(datepicker);
+                        break;
+                    case 40:
+                        datepicker.downEvent();
+                        break;
+                    case 39:
+                        datepicker.rightEvent();
+                        break;
+                    case 37:
+                        datepicker.leftEvent();
+                        break;
+                    case 8:
+                    case 46:
+                        datepicker.deleteEvent();
+                        break;
+                    }
+                }
+            }, false);
+        };
+
+        this.init_input();
+        delete this.init_input;
+
+        this.update = function () {
+            if (this.month) {
+                this.monthInput.value = this.zerofill(2, this.month);
+            } else {
+                this.monthInput.value = 'mm';
+            }
+            if (this.day) {
+                this.dayInput.value = this.zerofill(2, this.day);
+            } else {
+                this.dayInput.value = 'dd';
+            }
+            if (this.year) {
+                this.yearInput.value = this.zerofill(4, this.year);
+            } else {
+                this.yearInput.value = 'yyyy';
+            }
+
+            if (this.month !== false || this.day !== false || this.year !== false) {
+                this.clearBtn.style.display = 'block';
+            } else {
+                this.clearBtn.style.display = 'none';
+            }
+        };
     }
 
     //http://stackoverflow.com/a/1268377
-    function setValue(el, len, value) {
+    DatePicker.prototype.zerofill = function (len, value) {
         var n = Math.abs(value),
             zeros = Math.max(0, len - Math.floor(n).toString().length),
             zeroString = Math.pow(10, zeros).toString().substr(1);
@@ -26,328 +190,182 @@
             zeroString = '-' + zeroString;
         }
 
-        el.value = zeroString + n;
-    }
+        return zeroString + n;
+    };
 
-    function increment_day(datepicker, amount) {
-        var dayInput = datepicker.querySelector('.pf-input-date-day'),
-            newValue;
+    //http://stackoverflow.com/a/384380/2250164
+    DatePicker.prototype.isElement = function (el) {
+        return (
+            typeof HTMLElement === "object" ? el instanceof HTMLElement : //DOM2
+                    el && typeof el === "object" && el !== null && el.nodeType === 1 &&
+                    typeof el.nodeName === "string"
+        );
+    };
+
+    DatePicker.prototype.increment_day = function (amount) {
+        var newValue;
 
         if (amount === false) {
-            dayInput.value = 'dd';
-        } else if (dayInput.value === '' || isNaN(dayInput.value)) {
-            setValue(dayInput, 2, date.getDate());
+            this.day = false;
+        } else if (this.day === false) {
+            this.day = this.date.getDate();
         } else {
-            newValue = parseInt(dayInput.value, 10) + amount;
+            newValue = this.day + amount;
 
             if (newValue > 31) {
-                setValue(dayInput, 2, 1);
+                this.day = 1;
             } else if (newValue < 1) {
-                setValue(dayInput, 2, 31);
+                this.day = 31;
             } else {
-                setValue(dayInput, 2, newValue);
+                this.day = newValue;
             }
         }
-    }
+        this.update();
+    };
 
-    function increment_month(datepicker, amount) {
-        var monthInput = datepicker.querySelector('.pf-input-date-month'),
-            newValue;
+    DatePicker.prototype.increment_month = function (amount) {
+        var newValue;
 
         if (amount === false) {
-            monthInput.value = 'mm';
-        } else if (monthInput.value === '' || isNaN(monthInput.value)) {
-            setValue(monthInput, 2, date.getMonth() + 1);
+            this.month = false;
+        } else if (this.month === false) {
+            this.month = this.date.getMonth() + 1;
         } else {
-            newValue = parseInt(monthInput.value, 10) + amount;
+            newValue = this.month + amount;
 
             if (newValue > 12) {
-                setValue(monthInput, 2, 1);
+                this.month = 1;
             } else if (newValue < 1) {
-                setValue(monthInput, 2, 12);
+                this.month = 12;
             } else {
-                setValue(monthInput, 2, newValue);
+                this.month = newValue;
             }
         }
-    }
+        this.update();
+    };
 
-    function increment_year(datepicker, amount) {
-        var yearInput = datepicker.querySelector('.pf-input-date-year'),
-            newValue;
+    DatePicker.prototype.increment_year = function (amount) {
+        var newValue;
 
         if (amount === false) {
-            yearInput.value = 'yyyy';
-        } else if (yearInput.value === '' || isNaN(yearInput.value)) {
-            setValue(yearInput, 4, date.getFullYear());
+            this.year = false;
+        } else if (this.year === false) {
+            this.year = this.date.getFullYear();
         } else {
-            newValue = parseInt(yearInput.value, 10) + amount;
+            newValue = this.year + amount;
 
             if (newValue < 0) {
-                setValue(yearInput, 2, date.getFullYear());
+                this.year = this.date.getFullYear();
             } else {
-                setValue(yearInput, 2, newValue);
+                this.year = newValue;
             }
         }
-    }
+        this.update();
+    };
 
-    function init_input(input) {
-        var wrapper = document.createElement('div'),
-            year = document.createElement('input'),
-            month = document.createElement('input'),
-            day = document.createElement('input'),
-            clear = document.createElement('button'),
-            up = document.createElement('button'),
-            down = document.createElement('button'),
-            toggleCalendar = document.createElement('button');
-
-        wrapper.setAttribute('class', input.getAttribute('class'));
-        wrapper.classList.add('pf-date-wrapper');
-
-        //hide the real input
-        input.style.display = 'none';
-
-        year.classList.add('pf-input-date-year');
-        month.classList.add('pf-input-date-month');
-        day.classList.add('pf-input-date-day');
-        year.setAttribute('type', 'text');
-        month.setAttribute('type', 'text');
-        day.setAttribute('type', 'text');
-
-        year.setAttribute('value', 'yyyy');
-        year.setAttribute('maxlength', 4);
-        month.setAttribute('value', 'mm');
-        month.setAttribute('maxlength', 2);
-        day.setAttribute('value', 'dd');
-        day.setAttribute('maxlength', 2);
-
-        clear.classList.add('pf-input-date-clear');
-        up.classList.add('pf-input-date-up');
-        down.classList.add('pf-input-date-down');
-        toggleCalendar.classList.add('pf-input-date-toggle-cal');
-        clear.setAttribute('tabindex', -1);
-        up.setAttribute('tabindex', -1);
-        down.setAttribute('tabindex', -1);
-        toggleCalendar.setAttribute('tabindex', -1);
-
-        wrapper.appendChild(month);
-        wrapper.innerHTML = wrapper.innerHTML + '/';
-        wrapper.appendChild(day);
-        wrapper.innerHTML = wrapper.innerHTML + '/';
-        wrapper.appendChild(year);
-        wrapper.appendChild(clear);
-        wrapper.appendChild(up);
-        wrapper.appendChild(down);
-        wrapper.appendChild(toggleCalendar);
-
-        //insert the fake input after the old
-        input.outerHTML = input.outerHTML + wrapper.outerHTML;
-    }
-
-    function upEvent() {
-        var datepicker = active_field.parentNode;
-
-        if (active_field.classList.contains('pf-input-date-year')) {
-            increment_year(datepicker, 1);
+    //Keypress Events
+    DatePicker.prototype.upEvent = function () {
+        if (this.active_field.classList.contains('pf-input-date-year')) {
+            this.increment_year(1);
         }
-        if (active_field.classList.contains('pf-input-date-month')) {
-            increment_month(datepicker, 1);
+        if (this.active_field.classList.contains('pf-input-date-month')) {
+            this.increment_month(1);
         }
-        if (active_field.classList.contains('pf-input-date-day')) {
-            increment_day(datepicker, 1);
+        if (this.active_field.classList.contains('pf-input-date-day')) {
+            this.increment_day(1);
         }
-    }
+    };
 
-    function downEvent() {
-        var datepicker = active_field.parentNode;
-        if (active_field.classList.contains('pf-input-date-year')) {
-            increment_year(datepicker, -1);
+    DatePicker.prototype.downEvent = function () {
+        if (this.active_field.classList.contains('pf-input-date-year')) {
+            this.increment_year(-1);
         }
-        if (active_field.classList.contains('pf-input-date-month')) {
-            increment_month(datepicker, -1);
+        if (this.active_field.classList.contains('pf-input-date-month')) {
+            this.increment_month(-1);
         }
-        if (active_field.classList.contains('pf-input-date-day')) {
-            increment_day(datepicker, -1);
+        if (this.active_field.classList.contains('pf-input-date-day')) {
+            this.increment_day(-1);
         }
-    }
+    };
 
-    function leftEvent() {
-        var inputs = active_field.parentNode.querySelectorAll('input'),
+    DatePicker.prototype.leftEvent = function () {
+        var inputs = this.active_field.parentNode.querySelectorAll('input'),
             i,
             len = inputs.length;
         for (i = 0; i < len; i = i + 1) {
-            if (i !== 0 && inputs[i] === active_field) {
+            if (i !== 0 && inputs[i] === this.active_field) {
                 inputs[(i - 1)].focus();
-                active_field = inputs[(i - 1)];
+                this.active_field = inputs[(i - 1)];
                 break;
             }
         }
-    }
+    };
 
-    function rightEvent() {
-        var inputs = active_field.parentNode.querySelectorAll('input'),
+    DatePicker.prototype.rightEvent = function () {
+        var inputs = this.active_field.parentNode.querySelectorAll('input'),
             i,
             len = inputs.length;
         for (i = 0; i < len; i = i + 1) {
-            if (i !== (len - 1) && inputs[i] === active_field) {
+            if (i !== (len - 1) && inputs[i] === this.active_field) {
                 inputs[(i + 1)].focus();
-                active_field = inputs[(i + 1)];
+                this.active_field = inputs[(i + 1)];
                 break;
             }
         }
-    }
+    };
 
-    function deleteEvent() {
-        var datepicker = active_field.parentNode;
-        if (active_field.classList.contains('pf-input-date-year')) {
-            increment_year(datepicker, false);
+    DatePicker.prototype.deleteEvent = function () {
+        if (this.active_field.classList.contains('pf-input-date-year')) {
+            this.increment_year(false);
         }
-        if (active_field.classList.contains('pf-input-date-month')) {
-            increment_month(datepicker, false);
+        if (this.active_field.classList.contains('pf-input-date-month')) {
+            this.increment_month(false);
         }
-        if (active_field.classList.contains('pf-input-date-day')) {
-            increment_day(datepicker, false);
+        if (this.active_field.classList.contains('pf-input-date-day')) {
+            this.increment_day(false);
         }
-    }
+    };
 
-    function clickWrapperEvent(e) {
-        var firstInput = e.target.querySelector('input');
-        if (firstInput) {
-            firstInput.focus();
-        }
-    }
-
-    function upBtnEvent(e) {
-        var datepicker = e.target.parentNode;
-        if (!active_field || datepicker !== active_field.parentNode) {
-            datepicker.querySelector('.pf-input-date-month').focus();
-            increment_month(datepicker, 1);
-        }
-    }
-
-    function downBtnEvent(e) {
-        var datepicker = e.target.parentNode;
-        if (!active_field || datepicker !== active_field.parentNode) {
-            datepicker.querySelector('.pf-input-date-month').focus();
-            increment_month(datepicker, -1);
-        }
-    }
-
-    function init() {
-        var date_inputs = document.querySelectorAll('.input_date'),
-            len = date_inputs.length,
-            i;
-
-        for (i = 0; i < len; i = i + 1) {
-            init_input(date_inputs[i]);
-        }
-
-        date_inputs = document.querySelectorAll('.pf-date-wrapper');
-        len = date_inputs.length;
-
-        for (i = 0; i < len; i = i + 1) {
-            date_inputs[i].addEventListener('click', clickWrapperEvent, false);
-            date_inputs[i].querySelector('.pf-input-date-up').addEventListener('click', upBtnEvent, false);
-            date_inputs[i].querySelector('.pf-input-date-down').addEventListener('click', downBtnEvent, false);
-        }
-
-        document.addEventListener("focus", function (e) {
-            var datepicker = e.target.parentNode;
-            if (e.target && e.target.classList && (e.target.classList.contains('pf-input-date-year') || e.target.classList.contains('pf-input-date-month') || e.target.classList.contains('pf-input-date-day'))) {
-                if (isNaN(parseInt(e.target.value, 10)) === true) {
-                    if (e.target.classList.contains('pf-input-date-year')) {
-                        increment_year(datepicker, false);
-                    }
-                    if (e.target.classList.contains('pf-input-date-month')) {
-                        increment_month(datepicker, false);
-                    }
-                    if (e.target.classList.contains('pf-input-date-day')) {
-                        increment_day(datepicker, false);
-                    }
-                }
-                active_field = e.target;
-                datepicker.classList.add('pf-wrapper-focused');
+    //Event Listener Events
+    DatePicker.prototype.handleEvent = function (e) {
+        if (e.type === 'click') {
+            if (e.target === this.wrapper) {
+                this.monthInput.focus();
+            } else if (e.target === this.clearBtn) {
+                this.month = false;
+                this.day = false;
+                this.year = false;
+                this.update();
+            } else if (e.target === this.upBtn) {
+                this.monthInput.focus();
+                this.increment_month(-1);
+            } else if (e.target === this.downBtn) {
+                this.monthInput.focus();
+                this.increment_month(-1);
             }
-        }, true);
+        }
+    };
 
-        document.addEventListener("blur", function (e) {
-            var datepicker = e.target.parentNode,
-                relatedTarget = null;
+    function publicInit(elements) {
+        var len, i,
+            datepickers = [];
+        //if only one element is passed put it in an array so I don't have to treat it differently.
+        if (elements.length === undefined) {
+            elements = [elements];
+        }
+        //Initialize all of the elements
+        for (i = 0, len = elements.length; i < len; i = i + 1) {
+            datepickers.push(new DatePicker(elements[i]));
+        }
 
-            if (isElement(e.explicitOriginalTarget)) { //Firefox
-                relatedTarget = e.explicitOriginalTarget;
-            } else if (isElement(e.relatedTarget)) { //Chrome
-                relatedTarget = e.relatedTarget;
-            }
-
-            if (relatedTarget && relatedTarget.classList.contains('pf-input-date-up') && relatedTarget.parentNode === e.target.parentNode) {
-                e.preventDefault();
-                if (e.target.classList.contains('pf-input-date-year')) {
-                    increment_year(datepicker, 1);
-                }
-                if (e.target.classList.contains('pf-input-date-month')) {
-                    increment_month(datepicker, 1);
-                }
-                if (e.target.classList.contains('pf-input-date-day')) {
-                    increment_day(datepicker, 1);
-                }
-                if (e.target && e.target.classList && (e.target.classList.contains('pf-input-date-year') || e.target.classList.contains('pf-input-date-month') || e.target.classList.contains('pf-input-date-day'))) {
-                    setTimeout(function () { e.target.focus(); }, 100);
-                }
-            } else if (relatedTarget && relatedTarget.classList.contains('pf-input-date-down') && relatedTarget.parentNode === e.target.parentNode) {
-                e.preventDefault();
-                if (e.target.classList.contains('pf-input-date-year')) {
-                    increment_year(datepicker, -1);
-                }
-                if (e.target.classList.contains('pf-input-date-month')) {
-                    increment_month(datepicker, -1);
-                }
-                if (e.target.classList.contains('pf-input-date-day')) {
-                    increment_day(datepicker, -1);
-                }
-                if (e.target && e.target.classList && (e.target.classList.contains('pf-input-date-year') || e.target.classList.contains('pf-input-date-month') || e.target.classList.contains('pf-input-date-day'))) {
-                    setTimeout(function () { e.target.focus(); }, 100);
-                }
-            } else if (e.target && e.target.classList && (e.target.classList.contains('pf-input-date-year') || e.target.classList.contains('pf-input-date-month') || e.target.classList.contains('pf-input-date-day'))) {
-                if (e.target.classList.contains('pf-input-date-year') && e.target.value === '') {
-                    e.target.value = 'yyyy';
-                }
-                if (e.target.classList.contains('pf-input-date-month') && e.target.value === '') {
-                    e.target.value = 'mm';
-                }
-                if (e.target.classList.contains('pf-input-date-day') && e.target.value === '') {
-                    e.target.value = 'dd';
-                }
-                active_field = null;
-                e.target.parentNode.classList.remove('pf-wrapper-focused');
-            }
-        }, true);
-
-        document.addEventListener('keyup', function (e) {
-            if (active_field !== null) {
-                switch (e.keyCode) {
-                case 38:
-                    upEvent();
-                    break;
-                case 40:
-                    downEvent();
-                    break;
-                case 39:
-                    rightEvent();
-                    break;
-                case 37:
-                    leftEvent();
-                    break;
-                case 8:
-                case 46:
-                    deleteEvent();
-                    break;
-                }
-            }
-        }, false);
     }
 
-    document.addEventListener("DOMContentLoaded", function () {
-        init();
-    });
-
+    return {
+        init: publicInit
+    };
 }(document));
+
+document.addEventListener("DOMContentLoaded", function () {
+    'use strict';
+    datepickerPolyfill.init(document.querySelectorAll('.input_date'));
+});

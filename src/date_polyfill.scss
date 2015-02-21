@@ -7,6 +7,9 @@ $clearColor:#3476FF;
 	display:inline-block;
 	width:169px;
 	border:1px solid $borderColor;
+	.pf-input-real{
+		display:none;
+	}
 	.pf-input-date-month, .pf-input-date-day, .pf-input-date-year{
 		border:none;
 		padding:none;
@@ -47,6 +50,7 @@ $clearColor:#3476FF;
     }
     .pf-input-date-clear{
     	right:2.65em;
+    	display:none;
     	&:before{
     		content:'\00d7';
     		font-size: 1.2em;
@@ -89,6 +93,7 @@ $clearColor:#3476FF;
 		border-color:darken($focusColor,5%);
 	}
 	&:hover, &.pf-wrapper-focused{
+		.pf-input-date-clear,
 	    .pf-input-date-up,
 	    .pf-input-date-down,
 	    .pf-input-date-toggle-cal{
