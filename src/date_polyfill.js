@@ -1,10 +1,20 @@
 /*jslint browser: true*/
 /*jslint devel: true*/
+/*global HTMLElement*/
 (function (document) {
     'use strict';
 
     var active_field = null,
         date = new Date();
+
+    //http://stackoverflow.com/a/384380/2250164
+    function isElement(el) {
+        return (
+            typeof HTMLElement === "object" ? el instanceof HTMLElement : //DOM2
+                    el && typeof el === "object" && el !== null && el.nodeType === 1 &&
+                    typeof el.nodeName === "string"
+        );
+    }
 
     //http://stackoverflow.com/a/1268377
     function setValue(el, len, value) {
@@ -242,7 +252,7 @@
 
         document.addEventListener("focus", function (e) {
             var datepicker = e.target.parentNode;
-            if (e.target.classList.contains('pf-input-date-year') || e.target.classList.contains('pf-input-date-month') || e.target.classList.contains('pf-input-date-day')) {
+            if (e.target && e.target.classList && (e.target.classList.contains('pf-input-date-year') || e.target.classList.contains('pf-input-date-month') || e.target.classList.contains('pf-input-date-day'))) {
                 if (isNaN(parseInt(e.target.value, 10)) === true) {
                     if (e.target.classList.contains('pf-input-date-year')) {
                         increment_year(datepicker, false);
@@ -260,45 +270,55 @@
         }, true);
 
         document.addEventListener("blur", function (e) {
-            if (e.target.classList.contains('pf-input-date-year') || e.target.classList.contains('pf-input-date-month') || e.target.classList.contains('pf-input-date-day')) {
-                var datepicker = e.target.parentNode;
-                if (e.relatedTarget && e.relatedTarget.classList.contains('pf-input-date-up') && e.relatedTarget.parentNode === e.target.parentNode) {
-                    e.preventDefault();
-                    if (e.target.classList.contains('pf-input-date-year')) {
-                        increment_year(datepicker, 1);
-                    }
-                    if (e.target.classList.contains('pf-input-date-month')) {
-                        increment_month(datepicker, 1);
-                    }
-                    if (e.target.classList.contains('pf-input-date-day')) {
-                        increment_day(datepicker, 1);
-                    }
-                    setTimeout(function () { e.target.focus(); }, 20);
-                } else if (e.relatedTarget && e.relatedTarget.classList.contains('pf-input-date-down') && e.relatedTarget.parentNode === e.target.parentNode) {
-                    e.preventDefault();
-                    if (e.target.classList.contains('pf-input-date-year')) {
-                        increment_year(datepicker, -1);
-                    }
-                    if (e.target.classList.contains('pf-input-date-month')) {
-                        increment_month(datepicker, -1);
-                    }
-                    if (e.target.classList.contains('pf-input-date-day')) {
-                        increment_day(datepicker, -1);
-                    }
-                    setTimeout(function () { e.target.focus(); }, 20);
-                } else {
-                    if (e.target.classList.contains('pf-input-date-year') && e.target.value === '') {
-                        e.target.value = 'yyyy';
-                    }
-                    if (e.target.classList.contains('pf-input-date-month') && e.target.value === '') {
-                        e.target.value = 'mm';
-                    }
-                    if (e.target.classList.contains('pf-input-date-day') && e.target.value === '') {
-                        e.target.value = 'dd';
-                    }
-                    active_field = null;
-                    e.target.parentNode.classList.remove('pf-wrapper-focused');
+            var datepicker = e.target.parentNode,
+                relatedTarget = null;
+
+            if (isElement(e.explicitOriginalTarget)) { //Firefox
+                relatedTarget = e.explicitOriginalTarget;
+            } else if (isElement(e.relatedTarget)) { //Chrome
+                relatedTarget = e.relatedTarget;
+            }
+
+            if (relatedTarget && relatedTarget.classList.contains('pf-input-date-up') && relatedTarget.parentNode === e.target.parentNode) {
+                e.preventDefault();
+                if (e.target.classList.contains('pf-input-date-year')) {
+                    increment_year(datepicker, 1);
                 }
+                if (e.target.classList.contains('pf-input-date-month')) {
+                    increment_month(datepicker, 1);
+                }
+                if (e.target.classList.contains('pf-input-date-day')) {
+                    increment_day(datepicker, 1);
+                }
+                if (e.target && e.target.classList && (e.target.classList.contains('pf-input-date-year') || e.target.classList.contains('pf-input-date-month') || e.target.classList.contains('pf-input-date-day'))) {
+                    setTimeout(function () { e.target.focus(); }, 100);
+                }
+            } else if (relatedTarget && relatedTarget.classList.contains('pf-input-date-down') && relatedTarget.parentNode === e.target.parentNode) {
+                e.preventDefault();
+                if (e.target.classList.contains('pf-input-date-year')) {
+                    increment_year(datepicker, -1);
+                }
+                if (e.target.classList.contains('pf-input-date-month')) {
+                    increment_month(datepicker, -1);
+                }
+                if (e.target.classList.contains('pf-input-date-day')) {
+                    increment_day(datepicker, -1);
+                }
+                if (e.target && e.target.classList && (e.target.classList.contains('pf-input-date-year') || e.target.classList.contains('pf-input-date-month') || e.target.classList.contains('pf-input-date-day'))) {
+                    setTimeout(function () { e.target.focus(); }, 100);
+                }
+            } else if (e.target && e.target.classList && (e.target.classList.contains('pf-input-date-year') || e.target.classList.contains('pf-input-date-month') || e.target.classList.contains('pf-input-date-day'))) {
+                if (e.target.classList.contains('pf-input-date-year') && e.target.value === '') {
+                    e.target.value = 'yyyy';
+                }
+                if (e.target.classList.contains('pf-input-date-month') && e.target.value === '') {
+                    e.target.value = 'mm';
+                }
+                if (e.target.classList.contains('pf-input-date-day') && e.target.value === '') {
+                    e.target.value = 'dd';
+                }
+                active_field = null;
+                e.target.parentNode.classList.remove('pf-wrapper-focused');
             }
         }, true);
 
