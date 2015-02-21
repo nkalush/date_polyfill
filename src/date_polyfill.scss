@@ -57,7 +57,7 @@ $clearColor:#3476FF;
     	}
     }
     .pf-input-date-up{
-    	height:.7em;
+    	height:50%;
     	right:1.5em;
     	background-color:$spinnerBGColor;
     	&:before{
@@ -68,8 +68,8 @@ $clearColor:#3476FF;
     	}
     }
     .pf-input-date-down{
-    	height:.7em;
-		top:.7em;
+    	height:50%;
+		top:50%;
     	right:1.5em;
     	background-color:$spinnerBGColor;
     	&:before{

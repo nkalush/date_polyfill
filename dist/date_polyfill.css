@@ -54,7 +54,7 @@
   color: #3476FF;
 }
 .pf-date-wrapper .pf-input-date-up {
-  height: .7em;
+  height: 50%;
   right: 1.5em;
   background-color: #D2D2D2;
 }
@@ -65,8 +65,8 @@
   top: -.525em;
 }
 .pf-date-wrapper .pf-input-date-down {
-  height: .7em;
-  top: .7em;
+  height: 50%;
+  top: 50%;
   right: 1.5em;
   background-color: #D2D2D2;
 }
