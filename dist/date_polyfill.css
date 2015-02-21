@@ -11,6 +11,7 @@
   border: none;
   padding: none;
   margin: 1px;
+  font-family: monospace;
 }
 .pf-date-wrapper .pf-input-date-month:focus, .pf-date-wrapper .pf-input-date-day:focus, .pf-date-wrapper .pf-input-date-year:focus {
   background: #c8daff;
@@ -19,10 +20,10 @@
   cursor: none;
 }
 .pf-date-wrapper .pf-input-date-month {
-  width: 1.75em;
+  width: 1.2em;
 }
 .pf-date-wrapper .pf-input-date-day {
-  width: 1.75em;
+  width: 1.2em;
 }
 .pf-date-wrapper .pf-input-date-year {
   width: 2.25em;

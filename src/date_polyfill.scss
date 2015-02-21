@@ -12,6 +12,7 @@ $borderColor: #A9A9A9;
 		border:none;
 		padding:none;
 		margin:1px;
+		font-family: monospace;
 		&:focus{
 			background: $focusColor;
 			box-shadow:none;
@@ -20,10 +21,10 @@ $borderColor: #A9A9A9;
 		}
 	}
 	.pf-input-date-month{
-		width:1.75em;
+		width:1.2em;
 	}
 	.pf-input-date-day{
-		width:1.75em;
+		width:1.2em;
 	}
 	.pf-input-date-year{
 		width:2.25em;
