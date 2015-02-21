@@ -7,6 +7,10 @@ module.exports = function(grunt) {
       }
     },
     jshint: {
+      options: {
+        // enforceall: true,
+        browser: true
+      },
       src: ['./src/*.js'],
     },
     uglify: {
@@ -19,6 +23,24 @@ module.exports = function(grunt) {
         }
       }
     },
+    sass: {
+      distmin: {
+        options: {
+          style: 'compressed'
+        },
+        files: {
+          './dist/date_polyfill.min.css': './src/date_polyfill.scss'
+        }
+      },
+      distfull: {
+        options: {
+          style: 'expanded'
+        },
+        files: {
+          './dist/date_polyfill.css': './src/date_polyfill.scss'
+        }
+      }
+    },
     watch: {
       js: {
         files: [
@@ -26,12 +48,19 @@ module.exports = function(grunt) {
           ],
         tasks: ['jslint', 'jshint', 'uglify:js']
       },
+      sass: {
+        files: [
+          './src/*.scss'
+          ],
+        tasks: ['sass']
+      },
     }
   });
 
   grunt.loadNpmTasks('grunt-jslint');
   grunt.loadNpmTasks('grunt-contrib-jshint');
   grunt.loadNpmTasks('grunt-contrib-uglify');
+  grunt.loadNpmTasks('grunt-contrib-sass');
   grunt.loadNpmTasks('grunt-contrib-watch');
 
   grunt.registerTask('default', ['jslint','jshint', 'uglify']);

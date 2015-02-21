@@ -1,0 +1,10 @@
+$focusColor: rgb(200, 218, 255);
+.pf-date-wrapper{
+	.pf-input-date-month, .pf-input-date-day, .pf-input-date-year{
+		&:focus{
+			background: $focusColor;
+			box-shadow:none;
+			outline:none;
+		}
+	}
+}

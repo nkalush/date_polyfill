@@ -5,6 +5,74 @@
     var active_field = null,
         date = new Date();
 
+    //http://stackoverflow.com/a/1268377
+    function setValue(el, len, value) {
+        var n = Math.abs(value),
+            zeros = Math.max(0, len - Math.floor(n).toString().length),
+            zeroString = Math.pow(10, zeros).toString().substr(1);
+
+        if (value < 0) {
+            zeroString = '-' + zeroString;
+        }
+
+        el.value = zeroString + n;
+    }
+
+    function increment_day(datepicker, amount) {
+        var dayInput = datepicker.querySelector('.pf-input-date-day'),
+            newValue;
+
+        if (dayInput.value === '') {
+            setValue(dayInput, 2, date.getDate());
+        } else {
+            newValue = parseInt(dayInput.value, 10) + amount;
+
+            if (newValue > 31) {
+                setValue(dayInput, 2, 1);
+            } else if (newValue < 1) {
+                setValue(dayInput, 2, 31);
+            } else {
+                setValue(dayInput, 2, newValue);
+            }
+        }
+    }
+
+    function increment_month(datepicker, amount) {
+        var monthInput = datepicker.querySelector('.pf-input-date-month'),
+            newValue;
+
+        if (monthInput.value === '') {
+            setValue(monthInput, 2, date.getMonth() + 1);
+        } else {
+            newValue = parseInt(monthInput.value, 10) + amount;
+
+            if (newValue > 12) {
+                setValue(monthInput, 2, 1);
+            } else if (newValue < 1) {
+                setValue(monthInput, 2, 12);
+            } else {
+                setValue(monthInput, 2, newValue);
+            }
+        }
+    }
+
+    function increment_year(datepicker, amount) {
+        var yearInput = datepicker.querySelector('.pf-input-date-year'),
+            newValue;
+
+        if (yearInput.value === '') {
+            setValue(yearInput, 4, date.getFullYear());
+        } else {
+            newValue = parseInt(yearInput.value, 10) + amount;
+
+            if (newValue < 0) {
+                setValue(yearInput, 2, date.getFullYear());
+            } else {
+                setValue(yearInput, 2, newValue);
+            }
+        }
+    }
+
     function init_input(input) {
         var wrapper = document.createElement('div'),
             year = document.createElement('input'),
@@ -47,77 +115,30 @@
         input.outerHTML = input.outerHTML + wrapper.outerHTML;
     }
 
-    //thx http://stackoverflow.com/a/1268377
-    function setValue(len, value) {
-        var n = Math.abs(value),
-            zeros = Math.max(0, len - Math.floor(n).toString().length),
-            zeroString = Math.pow(10, zeros).toString().substr(1);
-
-        if (value < 0) {
-            zeroString = '-' + zeroString;
-        }
-
-        active_field.value = zeroString + n;
-    }
-
-
     function upEvent() {
-        if (active_field.value === '') {
-            if (active_field.classList.contains('pf-input-date-year')) {
-                setValue(4, date.getFullYear());
-            }
-            if (active_field.classList.contains('pf-input-date-month')) {
-                setValue(2, date.getMonth() + 1);
-            }
-            if (active_field.classList.contains('pf-input-date-day')) {
-                setValue(2, date.getDate());
-            }
-        } else {
-            if (active_field.classList.contains('pf-input-date-day')) {
-                if (parseInt(active_field.value, 10) >= 31) {
-                    setValue(2, 1);
-                } else {
-                    setValue(2, (parseInt(active_field.value, 10) + 1));
-                }
-            } else if (active_field.classList.contains('pf-input-date-month')) {
-                if (parseInt(active_field.value, 10) >= 12) {
-                    setValue(2, 1);
-                } else {
-                    setValue(2, parseInt(active_field.value, 10) + 1);
-                }
-            } else {
-                setValue(4, parseInt(active_field.value, 10) + 1);
-            }
+        var datepicker = active_field.parentNode;
+
+        if (active_field.classList.contains('pf-input-date-year')) {
+            increment_year(datepicker, 1);
+        }
+        if (active_field.classList.contains('pf-input-date-month')) {
+            increment_month(datepicker, 1);
+        }
+        if (active_field.classList.contains('pf-input-date-day')) {
+            increment_day(datepicker, 1);
         }
     }
 
     function downEvent() {
-        if (active_field.value === '') {
-            if (active_field.classList.contains('pf-input-date-year')) {
-                setValue(4, date.getFullYear());
-            }
-            if (active_field.classList.contains('pf-input-date-month')) {
-                setValue(2, date.getMonth() + 1);
-            }
-            if (active_field.classList.contains('pf-input-date-day')) {
-                setValue(2, date.getDate());
-            }
-        } else {
-            if (active_field.classList.contains('pf-input-date-day')) {
-                if (parseInt(active_field.value, 10) <= 1) {
-                    setValue(2, 31);
-                } else {
-                    setValue(2, (parseInt(active_field.value, 10) - 1));
-                }
-            } else if (active_field.classList.contains('pf-input-date-month')) {
-                if (parseInt(active_field.value, 10) <= 1) {
-                    setValue(2, 12);
-                } else {
-                    setValue(2, (parseInt(active_field.value, 10) - 1));
-                }
-            } else {
-                setValue(4, (parseInt(active_field.value, 10) - 1));
-            }
+        var datepicker = active_field.parentNode;
+        if (active_field.classList.contains('pf-input-date-year')) {
+            increment_year(datepicker, -1);
+        }
+        if (active_field.classList.contains('pf-input-date-month')) {
+            increment_month(datepicker, -1);
+        }
+        if (active_field.classList.contains('pf-input-date-day')) {
+            increment_day(datepicker, -1);
         }
     }
 

@@ -1,0 +1,7 @@
+{
+"version": 3,
+"mappings": "AAGE,gIAAO,CACN,UAAU,CAJA,OAAkB,CAK5B,UAAU,CAAC,IAAI,CACf,OAAO,CAAC,IAAI",
+"sources": ["../src/date_polyfill.scss"],
+"names": [],
+"file": "date_polyfill.min.css"
+}
