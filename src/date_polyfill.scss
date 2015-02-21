@@ -1,10 +1,31 @@
 $focusColor: rgb(200, 218, 255);
+$borderColor: #A9A9A9;
 .pf-date-wrapper{
+	display:inline-block;
+	width:169px;
+	border:1px solid $borderColor;
+	&.pf-wrapper-focused{
+		box-shadow:0 0 3px 2px $focusColor;
+		border-color:darken($focusColor,5%);
+	}
 	.pf-input-date-month, .pf-input-date-day, .pf-input-date-year{
+		border:none;
+		padding:none;
+		margin:1px;
 		&:focus{
 			background: $focusColor;
 			box-shadow:none;
 			outline:none;
+			cursor:none;
 		}
+	}
+	.pf-input-date-month{
+		width:1.75em;
+	}
+	.pf-input-date-day{
+		width:1.75em;
+	}
+	.pf-input-date-year{
+		width:2.25em;
 	}
 }
