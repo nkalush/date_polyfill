@@ -1,7 +1,8 @@
 /*jslint browser: true*/
 /*jslint devel: true*/
-(function (window, document) {
+(function (document) {
     'use strict';
+
     var active_field = null,
         date = new Date();
 
@@ -22,7 +23,9 @@
         var dayInput = datepicker.querySelector('.pf-input-date-day'),
             newValue;
 
-        if (dayInput.value === '') {
+        if (amount === false) {
+            dayInput.value = 'dd';
+        } else if (dayInput.value === '' || isNaN(dayInput.value)) {
             setValue(dayInput, 2, date.getDate());
         } else {
             newValue = parseInt(dayInput.value, 10) + amount;
@@ -41,7 +44,9 @@
         var monthInput = datepicker.querySelector('.pf-input-date-month'),
             newValue;
 
-        if (monthInput.value === '') {
+        if (amount === false) {
+            monthInput.value = 'mm';
+        } else if (monthInput.value === '' || isNaN(monthInput.value)) {
             setValue(monthInput, 2, date.getMonth() + 1);
         } else {
             newValue = parseInt(monthInput.value, 10) + amount;
@@ -60,7 +65,9 @@
         var yearInput = datepicker.querySelector('.pf-input-date-year'),
             newValue;
 
-        if (yearInput.value === '') {
+        if (amount === false) {
+            yearInput.value = 'yyyy';
+        } else if (yearInput.value === '' || isNaN(yearInput.value)) {
             setValue(yearInput, 4, date.getFullYear());
         } else {
             newValue = parseInt(yearInput.value, 10) + amount;
@@ -77,19 +84,13 @@
         var wrapper = document.createElement('div'),
             year = document.createElement('input'),
             month = document.createElement('input'),
-            day = document.createElement('input'),
-            input_style = window.getComputedStyle(input, null);
+            day = document.createElement('input');
 
         wrapper.setAttribute('class', input.getAttribute('class'));
         wrapper.classList.add('pf-date-wrapper');
-        //Copy all of the styles from the real input
-        wrapper.style.cssText = input_style.cssText;
+
         //hide the real input
         input.style.display = 'none';
-
-        year.style.cssText = 'border:none;padding:none;width:2.25em';
-        month.style.cssText = 'border:none;padding:none;width:1.5em';
-        day.style.cssText = 'border:none;padding:none;width:1.5em';
 
         year.classList.add('pf-input-date-year');
         month.classList.add('pf-input-date-month');
@@ -168,6 +169,19 @@
         }
     }
 
+    function deleteEvent() {
+        var datepicker = active_field.parentNode;
+        if (active_field.classList.contains('pf-input-date-year')) {
+            increment_year(datepicker, false);
+        }
+        if (active_field.classList.contains('pf-input-date-month')) {
+            increment_month(datepicker, false);
+        }
+        if (active_field.classList.contains('pf-input-date-day')) {
+            increment_day(datepicker, false);
+        }
+    }
+
     function clickWrapperEvent(e) {
         var firstInput = e.target.querySelector('input');
         if (firstInput) {
@@ -192,11 +206,21 @@
         }
 
         document.addEventListener("focus", function (e) {
+            var datepicker = e.target.parentNode;
             if (e.target.classList.contains('pf-input-date-year') || e.target.classList.contains('pf-input-date-month') || e.target.classList.contains('pf-input-date-day')) {
                 if (isNaN(parseInt(e.target.value, 10)) === true) {
-                    e.target.value = '';
+                    if (e.target.classList.contains('pf-input-date-year')) {
+                        increment_year(datepicker, false);
+                    }
+                    if (e.target.classList.contains('pf-input-date-month')) {
+                        increment_month(datepicker, false);
+                    }
+                    if (e.target.classList.contains('pf-input-date-day')) {
+                        increment_day(datepicker, false);
+                    }
                 }
                 active_field = e.target;
+                datepicker.classList.add('pf-wrapper-focused');
             }
         }, true);
 
@@ -211,10 +235,12 @@
                 e.target.value = 'dd';
             }
             active_field = null;
+            e.target.parentNode.classList.remove('pf-wrapper-focused');
         }, true);
 
         document.addEventListener('keyup', function (e) {
             if (active_field !== null) {
+                console.log(e.keyCode);
                 switch (e.keyCode) {
                 case 38:
                     upEvent();
@@ -228,6 +254,10 @@
                 case 37:
                     leftEvent();
                     break;
+                case 8:
+                case 46:
+                    deleteEvent();
+                    break;
                 }
             }
         }, false);
@@ -237,4 +267,4 @@
         init();
     });
 
-}(window, document));
+}(document));
