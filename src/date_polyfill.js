@@ -84,7 +84,11 @@
         var wrapper = document.createElement('div'),
             year = document.createElement('input'),
             month = document.createElement('input'),
-            day = document.createElement('input');
+            day = document.createElement('input'),
+            clear = document.createElement('button'),
+            up = document.createElement('button'),
+            down = document.createElement('button'),
+            toggleCalendar = document.createElement('button');
 
         wrapper.setAttribute('class', input.getAttribute('class'));
         wrapper.classList.add('pf-date-wrapper');
@@ -106,11 +110,24 @@
         day.setAttribute('value', 'dd');
         day.setAttribute('maxlength', 2);
 
+        clear.classList.add('pf-input-date-clear');
+        up.classList.add('pf-input-date-up');
+        down.classList.add('pf-input-date-down');
+        toggleCalendar.classList.add('pf-input-date-toggle-cal');
+        clear.setAttribute('tabindex', -1);
+        up.setAttribute('tabindex', -1);
+        down.setAttribute('tabindex', -1);
+        toggleCalendar.setAttribute('tabindex', -1);
+
         wrapper.appendChild(month);
-        wrapper.innerHTML = wrapper.innerHTML + ' / ';
+        wrapper.innerHTML = wrapper.innerHTML + '/';
         wrapper.appendChild(day);
-        wrapper.innerHTML = wrapper.innerHTML + ' / ';
+        wrapper.innerHTML = wrapper.innerHTML + '/';
         wrapper.appendChild(year);
+        wrapper.appendChild(clear);
+        wrapper.appendChild(up);
+        wrapper.appendChild(down);
+        wrapper.appendChild(toggleCalendar);
 
         //insert the fake input after the old
         input.outerHTML = input.outerHTML + wrapper.outerHTML;
@@ -189,6 +206,22 @@
         }
     }
 
+    function upBtnEvent(e) {
+        var datepicker = e.target.parentNode;
+        if (!active_field || datepicker !== active_field.parentNode) {
+            datepicker.querySelector('.pf-input-date-month').focus();
+            increment_month(datepicker, 1);
+        }
+    }
+
+    function downBtnEvent(e) {
+        var datepicker = e.target.parentNode;
+        if (!active_field || datepicker !== active_field.parentNode) {
+            datepicker.querySelector('.pf-input-date-month').focus();
+            increment_month(datepicker, -1);
+        }
+    }
+
     function init() {
         var date_inputs = document.querySelectorAll('.input_date'),
             len = date_inputs.length,
@@ -203,6 +236,8 @@
 
         for (i = 0; i < len; i = i + 1) {
             date_inputs[i].addEventListener('click', clickWrapperEvent, false);
+            date_inputs[i].querySelector('.pf-input-date-up').addEventListener('click', upBtnEvent, false);
+            date_inputs[i].querySelector('.pf-input-date-down').addEventListener('click', downBtnEvent, false);
         }
 
         document.addEventListener("focus", function (e) {
@@ -225,17 +260,46 @@
         }, true);
 
         document.addEventListener("blur", function (e) {
-            if (e.target.classList.contains('pf-input-date-year') && e.target.value === '') {
-                e.target.value = 'yyyy';
+            if (e.target.classList.contains('pf-input-date-year') || e.target.classList.contains('pf-input-date-month') || e.target.classList.contains('pf-input-date-day')) {
+                var datepicker = e.target.parentNode;
+                if (e.relatedTarget && e.relatedTarget.classList.contains('pf-input-date-up') && e.relatedTarget.parentNode === e.target.parentNode) {
+                    e.preventDefault();
+                    if (e.target.classList.contains('pf-input-date-year')) {
+                        increment_year(datepicker, 1);
+                    }
+                    if (e.target.classList.contains('pf-input-date-month')) {
+                        increment_month(datepicker, 1);
+                    }
+                    if (e.target.classList.contains('pf-input-date-day')) {
+                        increment_day(datepicker, 1);
+                    }
+                    setTimeout(function () { e.target.focus(); }, 20);
+                } else if (e.relatedTarget && e.relatedTarget.classList.contains('pf-input-date-down') && e.relatedTarget.parentNode === e.target.parentNode) {
+                    e.preventDefault();
+                    if (e.target.classList.contains('pf-input-date-year')) {
+                        increment_year(datepicker, -1);
+                    }
+                    if (e.target.classList.contains('pf-input-date-month')) {
+                        increment_month(datepicker, -1);
+                    }
+                    if (e.target.classList.contains('pf-input-date-day')) {
+                        increment_day(datepicker, -1);
+                    }
+                    setTimeout(function () { e.target.focus(); }, 20);
+                } else {
+                    if (e.target.classList.contains('pf-input-date-year') && e.target.value === '') {
+                        e.target.value = 'yyyy';
+                    }
+                    if (e.target.classList.contains('pf-input-date-month') && e.target.value === '') {
+                        e.target.value = 'mm';
+                    }
+                    if (e.target.classList.contains('pf-input-date-day') && e.target.value === '') {
+                        e.target.value = 'dd';
+                    }
+                    active_field = null;
+                    e.target.parentNode.classList.remove('pf-wrapper-focused');
+                }
             }
-            if (e.target.classList.contains('pf-input-date-month') && e.target.value === '') {
-                e.target.value = 'mm';
-            }
-            if (e.target.classList.contains('pf-input-date-day') && e.target.value === '') {
-                e.target.value = 'dd';
-            }
-            active_field = null;
-            e.target.parentNode.classList.remove('pf-wrapper-focused');
         }, true);
 
         document.addEventListener('keyup', function (e) {

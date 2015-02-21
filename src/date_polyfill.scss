@@ -1,13 +1,12 @@
 $focusColor: rgb(200, 218, 255);
 $borderColor: #A9A9A9;
+$spinnerBGColor: #D2D2D2;
+$clearColor:#3476FF;
 .pf-date-wrapper{
+	position:relative;
 	display:inline-block;
 	width:169px;
 	border:1px solid $borderColor;
-	&.pf-wrapper-focused{
-		box-shadow:0 0 3px 2px $focusColor;
-		border-color:darken($focusColor,5%);
-	}
 	.pf-input-date-month, .pf-input-date-day, .pf-input-date-year{
 		border:none;
 		padding:none;
@@ -29,4 +28,72 @@ $borderColor: #A9A9A9;
 	.pf-input-date-year{
 		width:2.25em;
 	}
+	.pf-input-date-clear,
+    .pf-input-date-up,
+    .pf-input-date-down,
+    .pf-input-date-toggle-cal{
+    	position:absolute;
+    	top:0;
+    	right:0;
+    	height:1.4em;
+    	padding:0 .25em;
+    	border:none;
+    	margin:0;
+    	background-color:transparent;
+    	opacity:0;
+    	-moz-transition:opacity .25s;
+    	-o-transition:opacity .25s;
+    	transition:opacity .25s;
+    }
+    .pf-input-date-clear{
+    	right:2.65em;
+    	&:before{
+    		content:'\00d7';
+    		font-size: 1.2em;
+    		position: relative;
+			top: .1em;
+			font-weight: bold;
+			color:$clearColor;
+    	}
+    }
+    .pf-input-date-up{
+    	height:.7em;
+    	right:1.5em;
+    	background-color:$spinnerBGColor;
+    	&:before{
+    		content:'\25b4';
+    		font-size: 1.2em;
+			position: relative;
+			top: -.525em;
+    	}
+    }
+    .pf-input-date-down{
+    	height:.7em;
+		top:.7em;
+    	right:1.5em;
+    	background-color:$spinnerBGColor;
+    	&:before{
+    		content:'\25be';
+    		font-size: 1.2em;
+			position: relative;
+			top: -.5em;
+    	}
+    }
+    .pf-input-date-toggle-cal{
+    	&:before{
+    		content:'\25bc';
+    	}
+    }
+    &.pf-wrapper-focused{
+		box-shadow:0 0 3px 2px $focusColor;
+		border-color:darken($focusColor,5%);
+	}
+	&:hover, &.pf-wrapper-focused{
+	    .pf-input-date-up,
+	    .pf-input-date-down,
+	    .pf-input-date-toggle-cal{
+			opacity:1;
+	    }
+	}
 }
+
