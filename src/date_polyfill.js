@@ -240,7 +240,6 @@
 
         document.addEventListener('keyup', function (e) {
             if (active_field !== null) {
-                console.log(e.keyCode);
                 switch (e.keyCode) {
                 case 38:
                     upEvent();
