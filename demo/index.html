@@ -3,6 +3,12 @@
 <head>
 <link rel="stylesheet" href="../dist/date_polyfill.min.css">
 <script src="../src/date_polyfill.js"></script>
+<script>
+	document.addEventListener("DOMContentLoaded", function () {
+	    'use strict';
+	    datepickerPolyfill.init(document.querySelectorAll('.input_date'));
+	});
+</script>
 </head>
 <body>
 <input type="text" name="begin" class="input_date">
