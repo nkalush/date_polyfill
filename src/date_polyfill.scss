@@ -60,33 +60,23 @@ $clearColor:#3476FF;
 			color:$clearColor;
     	}
     }
+    .pf-input-date-up, .pf-input-date-down{
+        height:50%;
+        right:1.5em;
+        width:1.25em;
+    }
     .pf-input-date-up{
-    	height:50%;
-    	right:1.5em;
-    	background-color:$spinnerBGColor;
-    	&:before{
-    		content:'\25b4';
-    		font-size: 1.2em;
-			position: relative;
-			top: -.525em;
-    	}
+
+    	background:$spinnerBGColor url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAcAAAAECAYAAABCxiV9AAAAJ0lEQVQIW2NkQAX/GRgYGGFCcAYDAwNIAkUcJoksAVcAksQmAVYAAPtZBATjFjjUAAAAAElFTkSuQmCC) no-repeat center center;
     }
     .pf-input-date-down{
-    	height:50%;
 		top:50%;
-    	right:1.5em;
-    	background-color:$spinnerBGColor;
-    	&:before{
-    		content:'\25be';
-    		font-size: 1.2em;
-			position: relative;
-			top: -.5em;
-    	}
+        background:$spinnerBGColor url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAcAAAAECAYAAABCxiV9AAAAI0lEQVQIW2NkYGD4z4ADMELFsSlghEmC1CArAIsjS8IUwMUA+wIEBOeTvfsAAAAASUVORK5CYII=) no-repeat center center;
     }
     .pf-input-date-toggle-cal{
-    	&:before{
-    		content:'\25bc';
-    	}
+        width: 1.5em;
+        height: 100%;
+        background:transparent url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAkAAAAFCAYAAACXU8ZrAAAAKklEQVQIW2NkYGD4z0AAMELl8SlkhCkCqcWmECyPrAhdIVwOXRFMIYo4APD+BQV5v6tcAAAAAElFTkSuQmCC) no-repeat center center;
     }
     &.pf-wrapper-focused{
 		box-shadow:0 0 3px 2px $focusColor;
