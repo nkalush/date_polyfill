@@ -8,13 +8,19 @@ var datepickerPolyfill = (function (document) {
     var datepickers = [];
 
     function getParent(el, parentSelector) {
-        var docEl = document.documentElement,
-            matches = docEl.matches || docEl.webkitMatchesSelector || docEl.mozMatchesSelector || docEl.msMatchesSelector || docEl.oMatchesSelector;
-
-        while (matches.call(el, parentSelector) === false) {
-            el = el.parentElement;
+        if (el && parentSelector) {
+            if (el.msMatchesSelector) { //IE
+                while (el && el.msMatchesSelector(parentSelector) === false) {
+                    el = el.parentElement;
+                }
+            } else if (el.matches) { //Everything Else
+                while (el && el.matches(parentSelector) === false) {
+                    el = el.parentElement;
+                }
+            }
+            return el;
         }
-        return el;
+        return false;
     }
 
     function getDatepicker(element) {
@@ -77,8 +83,13 @@ var datepickerPolyfill = (function (document) {
             datepicker.upBtn = wrapper.querySelector('.pf-input-date-up');
             datepicker.downBtn = wrapper.querySelector('.pf-input-date-down');
 
-            document.removeEventListener("blur", this.blurEvent, true);
-            document.addEventListener("blur", this.blurEvent, true);
+            if (window.navigator.userAgent.indexOf('.NET') !== -1 || window.navigator.userAgent.indexOf('MSIE ') !== -1) {
+                document.removeEventListener("focusout", this.blurEvent, false);
+                document.addEventListener("focusout", this.blurEvent, false);
+            } else {
+                document.removeEventListener("blur", this.blurEvent, true);
+                document.addEventListener("blur", this.blurEvent, true);
+            }
 
             wrapper.removeEventListener('click', datepicker, false);
             wrapper.addEventListener('click', datepicker, false);
@@ -89,47 +100,11 @@ var datepickerPolyfill = (function (document) {
             this.clearBtn.removeEventListener('click', datepicker, false);
             this.clearBtn.addEventListener('click', datepicker, false);
 
-            //When you focus one of the 3 date inputs it adds a class and if the input is not numbers it resets
-            document.addEventListener("focus", function (e) {
-                if (e.target && e.target.parentNode === wrapper && e.target.classList && (e.target.classList.contains('pf-input-date-year') || e.target.classList.contains('pf-input-date-month') || e.target.classList.contains('pf-input-date-day'))) {
-                    if (isNaN(parseInt(e.target.value, 10)) === true) {
-                        if (e.target.classList.contains('pf-input-date-year')) {
-                            datepicker.increment_year(false);
-                        }
-                        if (e.target.classList.contains('pf-input-date-month')) {
-                            datepicker.increment_month(false);
-                        }
-                        if (e.target.classList.contains('pf-input-date-day')) {
-                            datepicker.increment_day(false);
-                        }
-                    }
-                    datepicker.active_field = e.target;
-                    wrapper.classList.add('pf-wrapper-focused');
-                }
-            }, true);
+            document.removeEventListener("focus", this.focusEvent, true);
+            document.addEventListener("focus", this.focusEvent, true);
 
-            document.addEventListener('keyup', function (e) {
-                if (datepicker.active_field !== null && datepicker.active_field.parentNode === wrapper) {
-                    switch (e.keyCode) {
-                    case 38:
-                        datepicker.upEvent(datepicker);
-                        break;
-                    case 40:
-                        datepicker.downEvent();
-                        break;
-                    case 39:
-                        datepicker.rightEvent();
-                        break;
-                    case 37:
-                        datepicker.leftEvent();
-                        break;
-                    case 8:
-                    case 46:
-                        datepicker.deleteEvent();
-                        break;
-                    }
-                }
-            }, false);
+            document.removeEventListener('keyup', this.keyUpEvent, false);
+            document.addEventListener('keyup', this.keyUpEvent, false);
         };
 
         this.init_input();
@@ -160,75 +135,125 @@ var datepickerPolyfill = (function (document) {
         };
     }
 
+    //Key actions
+    DatePicker.prototype.keyUpEvent = function (e) {
+        var wrapper = getParent(e.target, '.pf-date-wrapper'),
+            datepicker = getDatepicker(wrapper);
+
+        if (datepicker.active_field && datepicker.active_field.parentNode === wrapper) {
+            switch (e.keyCode) {
+            case 38:
+                datepicker.upEvent(datepicker);
+                break;
+            case 40:
+                datepicker.downEvent();
+                break;
+            case 39:
+                datepicker.rightEvent();
+                break;
+            case 37:
+                datepicker.leftEvent();
+                break;
+            case 8:
+            case 46:
+                datepicker.deleteEvent();
+                break;
+            }
+        }
+    };
+
+    //When the user focuses one of the three date inputs it resets it if the value isn't valid and gives the wrapper a class to make it look focused
+    DatePicker.prototype.focusEvent = function (e) {
+        var wrapper = getParent(e.target, '.pf-date-wrapper'),
+            datepicker = getDatepicker(wrapper);
+
+        if (e.target && e.target.parentNode === wrapper && e.target.classList && (e.target.classList.contains('pf-input-date-year') || e.target.classList.contains('pf-input-date-month') || e.target.classList.contains('pf-input-date-day'))) {
+            if (isNaN(parseInt(e.target.value, 10)) === true) {
+                if (e.target.classList.contains('pf-input-date-year')) {
+                    datepicker.increment_year(false);
+                }
+                if (e.target.classList.contains('pf-input-date-month')) {
+                    datepicker.increment_month(false);
+                }
+                if (e.target.classList.contains('pf-input-date-day')) {
+                    datepicker.increment_day(false);
+                }
+            }
+            datepicker.active_field = e.target;
+            wrapper.classList.add('pf-wrapper-focused');
+        }
+    };
+
     //if you have a date input focused and you click one of the spinner buttons it should increment the input and refocus.
     DatePicker.prototype.blurEvent = function (e) {
         var relatedTarget = null,
             dp_el = getParent(e.target, '.pf-date-wrapper'),
-            datepicker = getDatepicker(dp_el);
+            datepicker = getDatepicker(dp_el),
+            refocusTimeout = 50;
 
-        if (datepicker.isElement(e.explicitOriginalTarget)) { //Firefox
-            relatedTarget = e.explicitOriginalTarget;
-        } else if (datepicker.isElement(e.relatedTarget)) { //Chrome
-            relatedTarget = e.relatedTarget;
-        }
-
-        if (relatedTarget && relatedTarget === datepicker.upBtn) {
-            e.preventDefault();
-            datepicker.blurClick = true;
-
-            if (e.target === datepicker.yearInput) {
-                datepicker.increment_year(1);
-                setTimeout(function () { datepicker.yearInput.focus(); }, 100);
-            } else if (e.target === datepicker.monthInput) {
-                datepicker.increment_month(1);
-                setTimeout(function () { datepicker.monthInput.focus(); }, 100);
-            } else if (e.target === datepicker.dayInput) {
-                datepicker.increment_day(1);
-                setTimeout(function () { datepicker.dayInput.focus(); }, 100);
+        if (dp_el && datepicker) {
+            if (datepicker.isElement(e.explicitOriginalTarget)) { //Firefox
+                relatedTarget = e.explicitOriginalTarget;
+            } else if (datepicker.isElement(e.relatedTarget)) { //IE, Chrome
+                relatedTarget = e.relatedTarget;
             }
-            // if (e.target && (e.target === datepicker.yearInput || e.target === datepicker.monthInput || e.target === datepicker.dayInput)) {
-            //     setTimeout(function () { e.target.focus(); }, 100);
-            // }
-        } else if (relatedTarget && relatedTarget === datepicker.downBtn) {
-            e.preventDefault();
-            datepicker.blurClick = true;
 
-            if (e.target === datepicker.yearInput) {
-                datepicker.increment_year(-1);
-                setTimeout(function () { datepicker.yearInput.focus(); }, 100);
-            } else if (e.target === datepicker.monthInput) {
-                datepicker.increment_month(-1);
-                setTimeout(function () { datepicker.monthInput.focus(); }, 100);
-            } else if (e.target === datepicker.dayInput) {
-                datepicker.increment_day(-1);
-                setTimeout(function () { e.target.focus(); }, 100);
+            if (relatedTarget && relatedTarget === datepicker.upBtn) {
+                e.preventDefault();
+                datepicker.blurClick = true;
+                if (e.target === datepicker.yearInput) {
+                    datepicker.increment_year(1);
+                    setTimeout(function () { datepicker.yearInput.focus(); }, refocusTimeout);
+                } else if (e.target === datepicker.monthInput) {
+                    datepicker.increment_month(1);
+                    setTimeout(function () { datepicker.monthInput.focus(); }, refocusTimeout);
+                } else if (e.target === datepicker.dayInput) {
+                    datepicker.increment_day(1);
+                    setTimeout(function () { datepicker.dayInput.focus(); }, refocusTimeout);
+                }
+                // if (e.target && (e.target === datepicker.yearInput || e.target === datepicker.monthInput || e.target === datepicker.dayInput)) {
+                //     setTimeout(function () { e.target.focus(); }, 100);
+                // }
+            } else if (relatedTarget && relatedTarget === datepicker.downBtn) {
+                e.preventDefault();
+                datepicker.blurClick = true;
+                if (e.target === datepicker.yearInput) {
+                    datepicker.increment_year(-1);
+                    setTimeout(function () { datepicker.yearInput.focus(); }, refocusTimeout);
+                } else if (e.target === datepicker.monthInput) {
+                    datepicker.increment_month(-1);
+                    setTimeout(function () { datepicker.monthInput.focus(); }, refocusTimeout);
+                } else if (e.target === datepicker.dayInput) {
+                    datepicker.increment_day(-1);
+                    setTimeout(function () { e.target.focus(); }, refocusTimeout);
+                }
+            // } else if (relatedTarget && relatedTarget.classList.contains('pf-input-date-down') && relatedTarget.parentNode === e.target.parentNode) {
+            //     e.preventDefault();
+            //     if (e.target.classList.contains('pf-input-date-year')) {
+            //         datepicker.increment_year(-1);
+            //     }
+            //     if (e.target.classList.contains('pf-input-date-month')) {
+            //         datepicker.increment_month(-1);
+            //     }
+            //     if (e.target.classList.contains('pf-input-date-day')) {
+            //         datepicker.increment_day(-1);
+            //     }
+            //     if (e.target && e.target.classList && (e.target.classList.contains('pf-input-date-year') || e.target.classList.contains('pf-input-date-month') || e.target.classList.contains('pf-input-date-day'))) {
+            //         setTimeout(function () { e.target.focus(); }, 100);
+            //     }
+            // } else if (e.target && e.target.classList && (e.target.classList.contains('pf-input-date-year') || e.target.classList.contains('pf-input-date-month') || e.target.classList.contains('pf-input-date-day'))) {
+            //     if (e.target.classList.contains('pf-input-date-year') && e.target.value === '') {
+            //         e.target.value = 'yyyy';
+            //     }
+            //     if (e.target.classList.contains('pf-input-date-month') && e.target.value === '') {
+            //         e.target.value = 'mm';
+            //     }
+            //     if (e.target.classList.contains('pf-input-date-day') && e.target.value === '') {
+            //         e.target.value = 'dd';
+            //     }
+            //     datepicker.active_field = null;
+            //     e.target.parentNode.classList.remove('pf-wrapper-focused');
             }
-        // } else if (relatedTarget && relatedTarget.classList.contains('pf-input-date-down') && relatedTarget.parentNode === e.target.parentNode) {
-        //     e.preventDefault();
-        //     if (e.target.classList.contains('pf-input-date-year')) {
-        //         datepicker.increment_year(-1);
-        //     }
-        //     if (e.target.classList.contains('pf-input-date-month')) {
-        //         datepicker.increment_month(-1);
-        //     }
-        //     if (e.target.classList.contains('pf-input-date-day')) {
-        //         datepicker.increment_day(-1);
-        //     }
-        //     if (e.target && e.target.classList && (e.target.classList.contains('pf-input-date-year') || e.target.classList.contains('pf-input-date-month') || e.target.classList.contains('pf-input-date-day'))) {
-        //         setTimeout(function () { e.target.focus(); }, 100);
-        //     }
-        // } else if (e.target && e.target.classList && (e.target.classList.contains('pf-input-date-year') || e.target.classList.contains('pf-input-date-month') || e.target.classList.contains('pf-input-date-day'))) {
-        //     if (e.target.classList.contains('pf-input-date-year') && e.target.value === '') {
-        //         e.target.value = 'yyyy';
-        //     }
-        //     if (e.target.classList.contains('pf-input-date-month') && e.target.value === '') {
-        //         e.target.value = 'mm';
-        //     }
-        //     if (e.target.classList.contains('pf-input-date-day') && e.target.value === '') {
-        //         e.target.value = 'dd';
-        //     }
-        //     datepicker.active_field = null;
-        //     e.target.parentNode.classList.remove('pf-wrapper-focused');
         }
     };
 
